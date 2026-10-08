@@ -1,0 +1,37 @@
+name: Build IPA for TrollStore
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+
+    steps:
+    - name: Checkout mã nguồn
+      uses: actions/checkout@v4
+
+    - name: Tạo cấu trúc thư mục iOS App chuẩn
+      run: |
+        mkdir -p build/Payload/WebViewApp.app
+
+    - name: Biên dịch mã nguồn Swift sang ARM64
+      run: |
+        xcrun -sdk iphoneos swiftc main.swift \
+          -target arm64-apple-ios14.0 \
+          -o build/Payload/WebViewApp.app/WebViewApp
+
+    - name: Cấu hình Info.plist vào ứng dụng
+      run: |
+        cp Info.plist build/Payload/WebViewApp.app/Info.plist
+
+    - name: Đóng gói thành file .IPA cho TrollStore
+      run: |
+        cd build
+        zip -r WebViewApp.ipa Payload
+        
+    - name: Tải file IPA lên GitHub Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: TrollStore-WebView-IPA
+        path: build/WebViewApp.ipa
